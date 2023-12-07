@@ -71,21 +71,31 @@
 // });
 
 // // server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
-
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
 const cors = require('cors');
 const User = require('./models/User');
 const Message = require('./models/Message');
-const Chat = require('./models/Chat'); // Import the Chat model
+const Chat = require('./models/Chat');
 const mongoose = require('mongoose');
 
 const PORT = process.env.PORT || 4001;
 
-mongoose.connect('mongodb://localhost:27017/chatapp');
+// mongoose.connect('mongodb://localhost:27017/chatapp');
+mongoose.connect('mongodb://127.0.0.1:27017/chatapp', { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => {
+    console.log('MongoDB connected successfully');
+  })
+  .catch((error) => {
+    console.error('MongoDB connection error:', error.message);
+  });
 
-const io = socketIo(PORT, {
+
+const app = express();
+const server = http.createServer(app);
+
+const io = socketIo(server, {
     cors: {
         origin: '*',
     }
@@ -103,6 +113,7 @@ io.on("connection", socket => {
                 'name': data.name,
                 'email': data.email,
                 'role': data.role,
+                'qrataid': data.qrataid,
                 id: socket.id,
             };
 
@@ -121,6 +132,7 @@ io.on("connection", socket => {
                     email: data.email,
                     socketId: socket.id,
                     role: data.role,
+                    qrataid: data.qrataid,
                 });
                 await newUser.save();
             }
@@ -177,7 +189,8 @@ io.on("connection", socket => {
             // Save the group message to the database
             const message = new Message({
                 sender: sender._id,
-                content: data.message,
+                content: data.content,
+                timestamp: Date.now(), // Add timestamp here
             });
             await message.save();
 
@@ -187,7 +200,11 @@ io.on("connection", socket => {
             await chat.save();
 
             // Broadcast the group message to all members
-            io.to(data.chatName).emit("receive group message", data);
+            io.to(data.chatName).emit("receive group message", {
+                sender: data.sender,
+                content: data.content,
+                timestamp: message.timestamp, // Send timestamp to clients
+            });
             console.log(`Group message distributed to ${data.chatName}`);
         } catch (error) {
             console.error('Error sending group message:', error.message);
@@ -208,5 +225,4 @@ io.on("connection", socket => {
     });
 });
 
-// Your server listening code remains unchanged
-// server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
+server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
