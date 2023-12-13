@@ -8,7 +8,8 @@
     "mongodb": "^6.3.0",
     "mongoose": "^8.0.2",
     "socket.io": "^4.7.2",
-    "socket.io-client": "^4.7.2"
+    "socket.io-client": "^4.7.2",
+    "uuid": "^9.0.1"
   },
   "scripts": {
     "start": "nodemon server.js"

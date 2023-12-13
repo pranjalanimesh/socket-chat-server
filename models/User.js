@@ -10,14 +10,6 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
-    socketId: {
-        type: String,
-        required: true,
-    },
-    conversation: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Chat"
-    },
     qrataid: {
         type: String,
         required: true,
@@ -25,9 +17,26 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['talent', 'talent-partner', 'admin', 'client'], // Set of allowed values
+        enum: ['talent', 'talent-partner', 'admin', 'customer'], // Set of allowed values
         required: true,
     },
+    contacts: [{
+        userId : {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+        },
+        qrataid: String,
+        name: String,
+        email: String,
+        conversationId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Conversation"
+        },
+    }],
+    conversations:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Conversation"
+    }],
 });
 
 const User = mongoose.model('User', userSchema);
