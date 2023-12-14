@@ -68,6 +68,34 @@ app.post("/chats", async (req, res) => {
     }
 });
 
+app.get("/user", async (req, res) => {
+    try {
+        let qrataid = req.query.qrataid;
+        let email = req.query.email;
+        if (qrataid) {
+            let user = await User.findOne({ qrataid: qrataid }); 
+            if (user) {
+                res.status(200).json(user);
+            } else {
+                res.status(400).json({ error: 'User not found in db.' });
+            }
+        } else if (email) {
+            let user = await User.findOne({ email: email });
+            if (user) {
+                res.status(200).json(user);
+            } else {
+                res.status(400).json({ error: 'User not found in db.' });
+            }
+        } else {
+            res.status(400).json({ error: 'QrataId and Email not given.' });
+        }
+    } catch (error) {
+        console.log('Error fetching user:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 const server = http.createServer(app);
 
 const io = socketIo(server, {
