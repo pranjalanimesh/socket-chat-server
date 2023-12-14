@@ -32,15 +32,36 @@ app.post("/chats", async (req, res) => {
         
         // let senderQrataId = req.body.senderQrataId;
         let senderEmail = req.body.senderEmail;
+        if (!senderEmail) {
+            res.status(400).json({ error: 'Sender email not found.' });
+            return;
+        }
         // let receiverQrataId = req.body.receiverQrataId;
         let receiverEmail = req.body.receiverEmail; 
+        if (!receiverEmail) {
+            res.status(400).json({ error: 'Receiver email not found.' });
+            return;
+        }
 
         // Find the sender user in the database
         let sender = await User.findOne({email: senderEmail });
+        if (!sender) {
+            res.status(400).json({ error: 'Sender not found in db.' });
+            return;
+        }
         let contacts = sender.contacts;
+
         let receiver = contacts.find((contact) => contact.email === receiverEmail);
+        if (!receiver) {
+            res.status(400).json({ error: 'Receiver not found in db.' });
+            return;
+        }
         let conversationId = receiver.conversationId;
         let conversation = await Conversation.findOne({ _id: conversationId });
+        if (!conversation) {
+            res.status(400).json({ error: 'Conversation not found in db.' });
+            return;
+        }
         res.status(200).json(conversation);
     } catch (error) {
         console.log('Error fetching chats:', error.message);
