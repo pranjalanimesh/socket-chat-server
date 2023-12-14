@@ -6,11 +6,12 @@ const User = require('./models/User');
 const Message = require('./models/Message');
 const Conversation = require('./models/Conversation');
 const mongoose = require('mongoose');
+require('dotenv').config();
 
 const PORT = process.env.PORT || 4001;
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/chat';
 
-// mongoose.connect('mongodb://localhost:27017/chat');
-mongoose.connect('mongodb://127.0.0.1:27017/chat', { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
     console.log('MongoDB connected successfully');
   })
@@ -30,13 +31,11 @@ app.get("/", (req, res) => {
 app.post("/chats", async (req, res) => {
     try {   
         
-        // let senderQrataId = req.body.senderQrataId;
         let senderEmail = req.body.senderEmail;
         if (!senderEmail) {
             res.status(400).json({ error: 'Sender email not found.' });
             return;
         }
-        // let receiverQrataId = req.body.receiverQrataId;
         let receiverEmail = req.body.receiverEmail; 
         if (!receiverEmail) {
             res.status(400).json({ error: 'Receiver email not found.' });
@@ -50,10 +49,10 @@ app.post("/chats", async (req, res) => {
             return;
         }
         let contacts = sender.contacts;
-
+        console.log("contacts", contacts);
         let receiver = contacts.find((contact) => contact.email === receiverEmail);
         if (!receiver) {
-            res.status(400).json({ error: 'Receiver not found in db.' });
+            res.status(400).json({ error: "Receiver not found in sender's contacts." });
             return;
         }
         let conversationId = receiver.conversationId;
