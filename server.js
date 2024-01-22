@@ -95,6 +95,34 @@ app.get("/user", async (req, res) => {
     }
 });
 
+app.post("/user", async (req, res) => {
+    try {
+        let qrataid = req.body.qrataid;
+        let email = req.body.email;
+        let name = req.body.name;
+        let role = req.body.role;
+
+
+        if (qrataid && email && name && role) {
+            // create a new user
+            
+            const newUser = new User({
+                name: name,
+                email: email,
+                role: role,
+                qrataid: qrataid,
+            });
+            await newUser.save();
+            res.status(200).json(newUser);
+        } else {
+            res.status(400).json({ error: 'QrataId, Email, Name and Role not given.' });
+        }
+    } catch (error) {
+        console.log('Error updating user:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 
 const server = http.createServer(app);
 
