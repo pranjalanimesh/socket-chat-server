@@ -6,11 +6,12 @@ const User = require('./models/User');
 const Message = require('./models/Message');
 const Conversation = require('./models/Conversation');
 const mongoose = require('mongoose');
+require('dotenv').config();
 
 const PORT = process.env.PORT || 4001;
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/chat';
 
-// mongoose.connect('mongodb://localhost:27017/chat');
-mongoose.connect('mongodb://127.0.0.1:27017/chat', { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
     console.log('MongoDB connected successfully');
   })
@@ -30,23 +31,70 @@ app.get("/", (req, res) => {
 app.post("/chats", async (req, res) => {
     try {   
         
-        // let senderQrataId = req.body.senderQrataId;
         let senderEmail = req.body.senderEmail;
-        // let receiverQrataId = req.body.receiverQrataId;
+        if (!senderEmail) {
+            res.status(400).json({ error: 'Sender email not found.' });
+            return;
+        }
         let receiverEmail = req.body.receiverEmail; 
+        if (!receiverEmail) {
+            res.status(400).json({ error: 'Receiver email not found.' });
+            return;
+        }
 
         // Find the sender user in the database
         let sender = await User.findOne({email: senderEmail });
+        if (!sender) {
+            res.status(400).json({ error: 'Sender not found in db.' });
+            return;
+        }
         let contacts = sender.contacts;
+        console.log("contacts", contacts);
         let receiver = contacts.find((contact) => contact.email === receiverEmail);
+        if (!receiver) {
+            res.status(400).json({ error: "Receiver not found in sender's contacts." });
+            return;
+        }
         let conversationId = receiver.conversationId;
         let conversation = await Conversation.findOne({ _id: conversationId });
+        if (!conversation) {
+            res.status(400).json({ error: 'Conversation not found in db.' });
+            return;
+        }
         res.status(200).json(conversation);
     } catch (error) {
         console.log('Error fetching chats:', error.message);
         res.status(500).json({ error: error.message });
     }
 });
+
+app.get("/user", async (req, res) => {
+    try {
+        let qrataid = req.query.qrataid;
+        let email = req.query.email;
+        if (qrataid) {
+            let user = await User.findOne({ qrataid: qrataid }); 
+            if (user) {
+                res.status(200).json(user);
+            } else {
+                res.status(400).json({ error: 'User not found in db.' });
+            }
+        } else if (email) {
+            let user = await User.findOne({ email: email });
+            if (user) {
+                res.status(200).json(user);
+            } else {
+                res.status(400).json({ error: 'User not found in db.' });
+            }
+        } else {
+            res.status(400).json({ error: 'QrataId and Email not given.' });
+        }
+    } catch (error) {
+        console.log('Error fetching user:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 
 const server = http.createServer(app);
 
